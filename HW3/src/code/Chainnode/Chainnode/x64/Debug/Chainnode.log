@@ -1,0 +1,3 @@
+﻿  Source.cpp
+F:\HW3\src\code\Chainnode\Chainnode\Source.cpp(251,39): warning C4244: '引數': 將 'int' 轉換為 'float'，由於類型不同，可能導致資料遺失
+  Chainnode.vcxproj -> F:\HW3\src\code\Chainnode\x64\Debug\Chainnode.exe
