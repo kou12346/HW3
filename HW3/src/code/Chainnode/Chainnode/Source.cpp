@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <cmath>
 
 // 定義 ChainNode 節點類
@@ -22,13 +22,22 @@ public:
     void addTerm(int coefficient, int exponent) {
         if (coefficient == 0) return;  // 忽略係數為0的項
         ChainNode* newNode = new ChainNode(coefficient, exponent);
-        if (!head || head->exponent < exponent) {
+        if (!head) {
+            head = newNode;
+            head->next = head; // 環狀
+        }
+        else if (head->exponent < exponent) {
+            ChainNode* tail = head;
+            while (tail->next != head) {
+                tail = tail->next;
+            }
             newNode->next = head;
             head = newNode;
+            tail->next = head; // 環狀
         }
         else {
             ChainNode* current = head;
-            while (current->next && current->next->exponent > exponent) {
+            while (current->next != head && current->next->exponent > exponent) {
                 current = current->next;
             }
             if (current->exponent == exponent) {
@@ -37,6 +46,9 @@ public:
             else {
                 newNode->next = current->next;
                 current->next = newNode;
+                if (newNode->next == head) {
+                    newNode->next = head;
+                }
             }
         }
     }
@@ -44,54 +56,45 @@ public:
     // 多項式加法
     Polynomial operator+(const Polynomial& other) const {
         Polynomial result;
+        if (!head) return other;
+        if (!other.head) return *this;
         ChainNode* a = head;
         ChainNode* b = other.head;
-        while (a || b) {
-            if (a && (!b || a->exponent > b->exponent)) {
-                result.addTerm(a->coefficient, a->exponent);
-                a = a->next;
-            }
-            else if (b && (!a || b->exponent > a->exponent)) {
-                result.addTerm(b->coefficient, b->exponent);
-                b = b->next;
-            }
-            else {
-                result.addTerm(a->coefficient + b->coefficient, a->exponent);
-                a = a->next;
-                b = b->next;
-            }
-        }
+        do {
+            result.addTerm(a->coefficient, a->exponent);
+            a = a->next;
+        } while (a != head);
+        do {
+            result.addTerm(b->coefficient, b->exponent);
+            b = b->next;
+        } while (b != other.head);
         return result;
     }
 
     // 多項式減法
     Polynomial operator-(const Polynomial& other) const {
         Polynomial result;
+        if (!head) return other;
+        if (!other.head) return *this;
         ChainNode* a = head;
         ChainNode* b = other.head;
-        while (a || b) {
-            if (a && (!b || a->exponent > b->exponent)) {
-                result.addTerm(a->coefficient, a->exponent);
-                a = a->next;
-            }
-            else if (b && (!a || b->exponent > a->exponent)) {
-                result.addTerm(-b->coefficient, b->exponent);
-                b = b->next;
-            }
-            else {
-                result.addTerm(a->coefficient - b->coefficient, a->exponent);
-                a = a->next;
-                b = b->next;
-            }
-        }
+        do {
+            result.addTerm(a->coefficient, a->exponent);
+            a = a->next;
+        } while (a != head);
+        do {
+            result.addTerm(-b->coefficient, b->exponent);
+            b = b->next;
+        } while (b != other.head);
         return result;
     }
 
     // 多項式乘法
     Polynomial operator*(const Polynomial& other) const {
         Polynomial result;
-        for (ChainNode* a = head; a; a = a->next) {
-            for (ChainNode* b = other.head; b; b = b->next) {
+        if (!head || !other.head) return result;
+        for (ChainNode* a = head; a->next != head; a = a->next) {
+            for (ChainNode* b = other.head; b->next != other.head; b = b->next) {
                 result.addTerm(a->coefficient * b->coefficient, a->exponent + b->exponent);
             }
         }
@@ -100,9 +103,10 @@ public:
 
     // 打印多項式
     void print() const {
+        if (!head) return;
         ChainNode* current = head;
         bool first = true;
-        while (current) {
+        do {
             if (!first && current->coefficient > 0) std::cout << " + ";
             if (current->exponent == 0) {
                 std::cout << current->coefficient;
@@ -115,18 +119,19 @@ public:
             }
             first = false;
             current = current->next;
-        }
+        } while (current != head);
         std::cout << std::endl;
     }
 
     // 計算多項式的值
     double evaluate(double x) const {
         double result = 0.0;
+        if (!head) return result;
         ChainNode* current = head;
-        while (current) {
+        do {
             result += current->coefficient * std::pow(x, current->exponent);
             current = current->next;
-        }
+        } while (current != head);
         return result;
     }
 };
@@ -179,3 +184,4 @@ int main() {
 
     return 0;
 }
+
